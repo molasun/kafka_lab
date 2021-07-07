@@ -14,7 +14,3 @@ spec:
   http:
     port: 8080
   replicas: 1
-  tls:
-    trustedCertificates:
-      - certificate: ca.crt
-        secretName: my-cluster-cluster-ca-cert
