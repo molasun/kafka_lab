@@ -1,0 +1,155 @@
+﻿apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  creationTimestamp: '2021-06-01T09:31:40Z'
+  generation: 14
+  managedFields:
+    - apiVersion: kafka.strimzi.io/v1beta2
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:spec':
+          .: {}
+          'f:cruiseControl':
+            .: {}
+            'f:metricsConfig':
+              .: {}
+              'f:type': {}
+              'f:valueFrom':
+                .: {}
+                'f:configMapKeyRef':
+                  .: {}
+                  'f:key': {}
+                  'f:name': {}
+          'f:entityOperator':
+            .: {}
+            'f:topicOperator': {}
+            'f:userOperator': {}
+          'f:kafka':
+            .: {}
+            'f:authorization':
+              .: {}
+              'f:type': {}
+            'f:config':
+              .: {}
+              'f:inter.broker.protocol.version': {}
+              'f:log.message.format.version': {}
+              'f:offsets.topic.replication.factor': {}
+              'f:transaction.state.log.min.isr': {}
+              'f:transaction.state.log.replication.factor': {}
+            'f:listeners': {}
+            'f:metricsConfig':
+              .: {}
+              'f:type': {}
+              'f:valueFrom':
+                .: {}
+                'f:configMapKeyRef':
+                  .: {}
+                  'f:key': {}
+                  'f:name': {}
+            'f:replicas': {}
+            'f:storage':
+              .: {}
+              'f:type': {}
+            'f:version': {}
+          'f:kafkaExporter': {}
+          'f:zookeeper':
+            .: {}
+            'f:metricsConfig':
+              .: {}
+              'f:type': {}
+              'f:valueFrom':
+                .: {}
+                'f:configMapKeyRef':
+                  .: {}
+                  'f:key': {}
+                  'f:name': {}
+            'f:replicas': {}
+            'f:storage':
+              .: {}
+              'f:type': {}
+      manager: Mozilla
+      operation: Update
+      time: '2021-06-03T08:28:39Z'
+    - apiVersion: kafka.strimzi.io/v1beta1
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:status':
+          .: {}
+          'f:conditions': {}
+          'f:observedGeneration': {}
+      manager: okhttp
+      operation: Update
+      time: '2021-06-10T01:15:44Z'
+  name: my-cluster
+  namespace: my-kafka-project
+  resourceVersion: '2081272'
+  selfLink: /apis/kafka.strimzi.io/v1beta2/namespaces/my-kafka-project/kafkas/my-cluster
+  uid: 2de278e3-c651-418a-b809-4e96d8c4feb8
+spec:
+  cruiseControl:
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: metrics-config.yml
+          name: cruise-control-metrics
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+  kafka:
+    authorization:
+      type: simple
+    config:
+      inter.broker.protocol.version: '2.7'
+      log.message.format.version: '2.7'
+      offsets.topic.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      transaction.state.log.replication.factor: 3
+    listeners:
+      - name: plain
+        port: 9092
+        tls: false
+        type: internal
+      - authentication:
+          type: scram-sha-512
+        name: tls
+        port: 9093
+        tls: false
+        type: internal
+      - authentication:
+          type: scram-sha-512
+        name: external
+        port: 9094
+        tls: true
+        type: route
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: kafka-metrics-config.yml
+          name: kafka-metrics
+    replicas: 3
+    storage:
+      type: ephemeral
+    version: 2.7.0
+  kafkaExporter: {}
+  zookeeper:
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: zookeeper-metrics-config.yml
+          name: kafka-metrics
+    replicas: 3
+    storage:
+      type: ephemeral
+status:
+  conditions:
+    - lastTransitionTime: '2021-06-10T05:34:14.007Z'
+      message: >-
+        The OpenShift route API is not available in this Kubernetes cluster.
+        Exposing Kafka cluster my-cluster using routes is not possible.
+      reason: NoStackTraceThrowable
+      status: 'True'
+      type: NotReady
+  observedGeneration: 14
