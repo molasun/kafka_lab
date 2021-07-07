@@ -1,0 +1,13 @@
+spring:
+  application.name: spring-consumer-app
+  kafka:
+    bootstrap-servers: my-cluster-kafka-bootstrap:9093
+    consumer:
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      group-id: spring-consumer-app
+      client-id: spring-consumer-app
+
+jaeger.tracer:
+  host: jaeger-agent
+  port: 6831
