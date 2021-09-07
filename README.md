@@ -12,7 +12,7 @@
 * Use installed operator to install Kafka cluster
   * Choose Kafka resource and create
     ![image](https://user-images.githubusercontent.com/58408898/132279765-2e403ba4-a9b8-4b45-91df-5299d9f66187.png)
-  * Create with yaml file, see [kafka-my-cluster](https://github.com/snowfish424/kafka_lab/edit/main/install/kafka-my-cluster.yaml) , make sure condition is ready
+  * Create with yaml file, see [kafka-my-cluster](https://github.com/snowfish424/kafka_lab/edit/main/install/kafka-my-cluster.yaml) , make sure the condition is ready
     ![image](https://user-images.githubusercontent.com/58408898/132281401-9f5fcb87-7b4d-4be5-bea5-d0b82aac9a72.png)
   * Check cluster status, a standard HA cluster should included
     * 1 cluster operator
@@ -24,17 +24,27 @@
 * Use installed operator to install Kafka bridge
   * Choose Kafka bridge resource and create
     ![image](https://user-images.githubusercontent.com/58408898/132295310-0f9c87ab-7b07-4db0-9c52-30515bbac223.png) 
-  * Create with yaml file, see [kafkabridge-rest](https://github.com/snowfish424/kafka_lab/blob/main/install/kafkabridge-rest.yaml) , make sure condition is ready
+  * Create with yaml file, see [kafkabridge-rest](https://github.com/snowfish424/kafka_lab/blob/main/install/kafkabridge-rest.yaml) , make sure the condition is ready
     ![image](https://user-images.githubusercontent.com/58408898/132298117-a59952e1-8bbc-4bdd-81c8-de4edf934ebf.png)
   * Check cluster status, a kafka-bridge pod should be created
     ![image](https://user-images.githubusercontent.com/58408898/132298800-264466d3-2273-470d-9afe-fb028fea4097.png)
 
 ## Create and set kafka topic
 
-* Use intalled operator to create Kafka topic
+* Use installed operator to create Kafka topic
   * Choose Kafka topic resource and create, there are 3 default topics
     * consumer-offsets
     * strimzi-store-topic
     * strimzi-topic-operator-kstreams-topic-store-changelog
     ![image](https://user-images.githubusercontent.com/58408898/132300235-87c78d8b-a738-4dfa-9e25-ee4b813d7eb1.png)
-  * 
+  * Create with yaml file, make sure new topic condition is ready
+    ![image](https://user-images.githubusercontent.com/58408898/132319195-1c48bc5f-b332-47fe-9467-fdec1b893940.png)
+* Use installed operator to create Kafka user
+  * Choose Kafka user resource and create
+    ![image](https://user-images.githubusercontent.com/58408898/132319684-f38a4ee5-5ca0-4667-a037-be7f732e994a.png)
+  * Create with yaml file, see [kafkauser-my-user](https://github.com/snowfish424/kafka_lab/blob/main/install/kafkauser-my-user.yaml) , make sure the condition is ready
+    ![image](https://user-images.githubusercontent.com/58408898/132320109-301f9cc6-9f1a-41ad-8cfc-3a1cccc14a9b.png)
+
+# Write and test Kafka client
+
+## Kafka client example
