@@ -3,7 +3,7 @@ kind: Jaeger
 metadata:
   labels:
     jaegertracing.io/operated-by: openshift-operators.jaeger-operator
-  name: amqs-jaeger
+  name: jaeger-all-in-one-inmemory
   namespace: amqs
 spec:
   strategy: allinone
