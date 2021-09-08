@@ -47,4 +47,25 @@
 
 # Write and test Kafka client
 
+## Create certification
+
+* Create Kafka cluster certification
+  * If you need to access with external route, then below step is needed
+  ```
+  export CLUSTER_NAME=my-cluster
+  
+  # export cert from Kafka cluster secert
+  oc get secret $CLUSTER_NAME-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 --decode > ca.crt
+  
+  # export password from Kafka cluster secret
+  oc get secret $CLUSTER_NAME-cluster-ca-cert -o jsonpath='{.data.ca\.password}' | base64 --decode > ca.password
+  ```   
+* Create and import Kafka cluster CA to truststore
+
+* Create Kafka user password
+  ``` 
+  oc get secret my-user -o jsonpath='{.data.password}' | base64 --decode > user-scram.password
+  ``` 
+  
 ## Kafka client example
+
