@@ -1,38 +1,11 @@
 ﻿apiVersion: jaegertracing.io/v1
 kind: Jaeger
 metadata:
-  creationTimestamp: '2021-06-23T02:52:26Z'
-  generation: 3
   labels:
     jaegertracing.io/operated-by: openshift-operators.jaeger-operator
   name: amqs-jaeger
-  namespace: amq-stream
-  resourceVersion: '63727'
-  selfLink: /apis/jaegertracing.io/v1/namespaces/amq-stream/jaegers/amqs-jaeger
-  uid: 9dd0b2f5-8083-43fc-a2c7-e4a207c04349
+  namespace: amqs
 spec:
-  allInOne:
-    config: {}
-    options: {}
-    resources: {}
-  resources: {}
-  agent:
-    config: {}
-    options: {}
-    resources: {}
-  sampling:
-    options: {}
-  query:
-    options: {}
-    resources: {}
-  collector:
-    config: {}
-    options: {}
-    resources: {}
-  ingester:
-    config: {}
-    options: {}
-    resources: {}
   strategy: allinone
   ui:
     options:
@@ -74,6 +47,3 @@ spec:
       schedule: 0 0 * * *
     options: {}
     type: memory
-status:
-  phase: Running
-  version: 1.20.3
