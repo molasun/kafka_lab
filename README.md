@@ -61,6 +61,15 @@
   oc get secret $CLUSTER_NAME-cluster-ca-cert -o jsonpath='{.data.ca\.password}' | base64 --decode > ca.password
   ```   
 * Create and import Kafka cluster CA to truststore
+  ``` 
+  export CERT_FILE_PATH=ca.crt
+  export CERT_PASSWORD_FILE_PATH=ca.password
+  export KEYSTORE_LOCATION=~/kafka-demo/src/main/resources/truststore.jks
+  export PASSWORD=`cat $CERT_PASSWORD_FILE_PATH`
+
+  # import CA trust store
+  keytool -importcert -alias strimzi-kafka-cert -file $CERT_FILE_PATH -keystore $KEYSTORE_LOCATION -keypass $PASSWORD
+  ```   
 
 * Create Kafka user password
   ``` 
@@ -68,4 +77,40 @@
   ``` 
   
 ## Kafka client example
+
+* Kafka client producer config
+  ``` 
+  @Bean
+	 public ProducerFactory<String, String> producerFactory() {
+		        Map<String, Object> producerProps = new HashMap<String, Object>();
+		        producerProps.put("bootstrap.servers", "my-cluster-kafka-bootstrap:9093");
+		        producerProps.put("acks", "all");
+		        producerProps.put("retries", 2);
+		        producerProps.put("max.block.ms", 5000);
+		        producerProps.put("batch.size", 16384);
+		        producerProps.put("linger.ms", 1);
+		        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		        producerProps.put("security.protocol", "SASL_PLAINTEXT");
+		        producerProps.put("sasl.mechanism", "SCRAM-SHA-512");
+		        producerProps.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"<password>\";");
+		        return new TracingProducerFactory<>(new DefaultKafkaProducerFactory<>(producerProps), tracer());
+	}
+  ```   
+
+* Kafka client consumer config
+  ``` 
+  @Bean
+	 public ConsumerFactory<String, String> consumerFactory() {
+		        Map<String, Object> consumerProps = new HashMap<String, Object>();
+		        consumerProps.put("bootstrap.servers", "my-cluster-kafka-bootstrap:9093");
+		        consumerProps.put("group.id", "sample-consumer");
+		        consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+		        consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+		        consumerProps.put("security.protocol", "SASL_PLAINTEXT");
+		        consumerProps.put("sasl.mechanism", "SCRAM-SHA-512");
+		        consumerProps.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"<password>\";");
+		        return new TracingConsumerFactory<>(new DefaultKafkaConsumerFactory<>(consumerProps), tracer());
+	}
+  ```
 
