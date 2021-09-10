@@ -156,3 +156,10 @@
   }
   ```
 
+# Kafka Monitoring
+
+## Create Metrics and Dashboard
+* Set up Promethues metrics
+  * Create kafka-metrics configmap in kafka namespaces, see [kafka-metrics-configmap](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/kafka-metrics-configmap.yaml)
+  * Create cluster-monitoring-config configmap
+* 
