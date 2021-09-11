@@ -139,7 +139,6 @@
 		        return new TracingProducerFactory<>(new DefaultKafkaProducerFactory<>(producerProps), tracer());
   }
   ```   
-
 * Kafka client consumer config
   ```java
   @Bean
@@ -159,7 +158,138 @@
 # Kafka Monitoring
 
 ## Create Metrics and Dashboard
-* Set up Promethues metrics
-  * Create kafka-metrics configmap in kafka namespaces, see [kafka-metrics-configmap](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/kafka-metrics-configmap.yaml)
-  * Create cluster-monitoring-config configmap
-* 
+* Set up user workload monitoring
+  * Create kafka-metrics configmap in kafka namespace, see [kafka-metrics-configmap](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/kafka-metrics-configmap.yaml)
+  * Create cluster-monitoring-config configmap in openshift-monitoring namespace (cluster admin role is needed), see [cluster-monitoring-config.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/cluster-monitoring-config.yaml)
+  * Create user-workload-monitoring-config configmap in openshift-user-workload-monitoring namesapce (cluster admin role is needed), see [user-workload-monitoring-config.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/user-workload-monitoring-config.yaml)
+  * Enable user workload in cluster-monitoring-config configmap (cluster admin role is needed)
+    ```yaml
+    kind: ConfigMap
+    apiVersion: v1
+    ...
+    data:
+      config.yaml: |
+        enableUserWorkload: true
+    ```
+  * Check monitoring workload is running
+    ```
+    oc get pod -n openshift-user-workload-monitoring       
+    ```
+    You should see below pods running
+    ```
+    NAME                                   READY   STATUS    RESTARTS   AGE
+    prometheus-operator-6f96b4b8f8-hls48   2/2     Running   0          10h
+    prometheus-user-workload-0             5/5     Running   1          10h
+    prometheus-user-workload-1             5/5     Running   1          10h
+    thanos-ruler-user-workload-0           3/3     Running   0          10h
+    thanos-ruler-user-workload-1           3/3     Running   0          10h
+    ```
+* Set up Prometheus rule
+  * Apply strimzi-pod-monitor, see [strimzi-pod-monitor.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/prometheus/strimzi-pod-monitor.yaml)
+    ```
+    oc apply -f strimzi-pod-monitor.yaml -n <your-kafka-project>
+    ```
+    You should see below resources created
+    ```
+    podmonitor.monitoring.coreos.com/cluster-operator-metrics created
+    podmonitor.monitoring.coreos.com/entity-operator-metrics created
+    podmonitor.monitoring.coreos.com/bridge-metrics created
+    podmonitor.monitoring.coreos.com/kafka-resources-metrics created
+    ```
+  * Apply Prometheus rule, see [prometheus-rules.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/prometheus/prometheus-rules.yaml)
+    ```
+    oc apply -f prometheus-rules.yaml -n <your-kafka-project>
+    ```
+    You should see below resource created
+    ```
+    prometheusrule.monitoring.coreos.com/prometheus-k8s-rules created
+    ```
+* Set up Grafana service account
+  *  Create grafana-serviceaccount, see [grafana-serviceaccount.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/grafana-serviceaccount.yaml)
+    ```
+    oc apply -f grafana-serviceaccount.yaml -n <your-kafka-project>
+    ```
+    You should see below resource created
+    ```
+    serviceaccount/grafana-serviceaccount created
+    ```
+  *  Create grafana-cluster-monitoring-binding, see [grafana-cluster-monitoring-binding.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/grafana-cluster-monitoring-binding.yaml)
+    ```
+    oc apply -f grafana-cluster-monitoring-binding.yaml -n <your-kafka-project>
+    ```
+    You should see below resource created
+    ```
+    clusterrolebinding.rbac.authorization.k8s.io/grafana-cluster-monitoring-binding created
+    ```
+* Set up Grafana dashboard
+  * Get grafana-serviceaccount token
+    ```
+    oc serviceaccounts get-token grafana-serviceaccount -n <your-kafka-project>
+    ```
+  * Create datasource.yaml and put the above token in secureJsonData.httpHeaderValue1 field
+    ```yaml
+    ...  
+      secureJsonData:
+        httpHeaderValue1: "Bearer <your token>"
+    ...	
+    ```
+  * Create grafana-config configmap with datasource.yaml
+    ```
+    oc create configmap grafana-config --from-file=datasource.yaml -n <your-kafka-project>
+    ```
+    You should see below resource created
+    ```
+    configmap/grafana-config created
+    ```
+  * Apply Grafana dashboard, see [grafana.yaml](https://github.com/snowfish424/kafka_lab/blob/main/monitor/grafana/grafana.yaml)
+    ```
+    oc apply -f grafana.yaml -n <your-kafka-project>
+    ```
+    You should see below resource created
+    ```
+    persistentvolumeclaim/grafana-data created
+    deployment.apps/grafana created
+    service/grafana created
+    route.route.openshift.io/grafana created
+    ```
+* Add kafka and zookeeper metrics config in Kafka CR
+    ```
+    spec:
+    ...
+      kafka:
+        metricsConfig:
+          type: jmxPrometheusExporter
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-metrics-config.yml
+              name: kafka-metrics
+    ...
+      zookeeper:
+        metricsConfig:
+          type: jmxPrometheusExporter
+          valueFrom:
+            configMapKeyRef:
+              key: zookeeper-metrics-config.yml
+              name: kafka-metrics  
+    ```
+
+## Login to Grafana and create basic dashboard
+* Login to Grafano through route, use default username and password(Should be admin/admin, you should change to new secure password)
+  ![image](https://user-images.githubusercontent.com/58408898/132934688-a88be152-191d-472e-8da2-51b0b0af5df3.png) 
+* Check Prometheus datasource
+  ![image](https://user-images.githubusercontent.com/58408898/132934963-f8d7dbb1-6b10-4c32-be27-88485d8e01c7.png) 
+  ![image](https://user-images.githubusercontent.com/58408898/132934972-6b84a0a8-96b8-4ed5-a1c6-4796d0f5db5c.png)
+* Import basic dashboard, see [dashboard json](https://github.com/snowfish424/kafka_lab/tree/main/monitor/grafana/dashboard)
+  * strimzi-kafka
+  * strimzi-zookeeper
+  * strimzi-kafka-exporter
+  * strimzi-operator
+  * strimzi-crusie-control
+  ![image](https://user-images.githubusercontent.com/58408898/132935056-176248a3-1d4c-4908-9380-14321beae207.png)
+* Check wtih Dashboard to see the data show appropriately
+  * Strimzi Kafka:
+    ![image](https://user-images.githubusercontent.com/58408898/132935850-0960c17a-103a-4206-921b-c03d5090cf72.png)
+  * Strimzi Kafka exporter:
+    ![image](https://user-images.githubusercontent.com/58408898/132935888-8718e0c1-f020-481a-8179-5afdefd6bfb3.png)
+  * Strimzi Zookeeper:
+    ![image](https://user-images.githubusercontent.com/58408898/132935908-6d9dae01-f4dc-4402-a65a-f20e88431e99.png)
