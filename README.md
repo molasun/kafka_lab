@@ -273,22 +273,81 @@
     ```
 
 ## Login to Grafana and create basic dashboard
-* Login to Grafano through route, use default username and password(Should be admin/admin, you should change to new secure password)
-  ![image](https://user-images.githubusercontent.com/58408898/132934688-a88be152-191d-472e-8da2-51b0b0af5df3.png) 
-* Check Prometheus datasource
-  ![image](https://user-images.githubusercontent.com/58408898/132934963-f8d7dbb1-6b10-4c32-be27-88485d8e01c7.png) 
-  ![image](https://user-images.githubusercontent.com/58408898/132934972-6b84a0a8-96b8-4ed5-a1c6-4796d0f5db5c.png)
-* Import basic dashboard, see [dashboard json](https://github.com/snowfish424/kafka_lab/tree/main/monitor/grafana/dashboard)
-  * strimzi-kafka
-  * strimzi-zookeeper
-  * strimzi-kafka-exporter
-  * strimzi-operator
-  * strimzi-crusie-control
-  ![image](https://user-images.githubusercontent.com/58408898/132935056-176248a3-1d4c-4908-9380-14321beae207.png)
-* Check wtih Dashboard to see the data show appropriately
-  * Strimzi Kafka:
-    ![image](https://user-images.githubusercontent.com/58408898/132935850-0960c17a-103a-4206-921b-c03d5090cf72.png)
-  * Strimzi Kafka exporter:
-    ![image](https://user-images.githubusercontent.com/58408898/132935888-8718e0c1-f020-481a-8179-5afdefd6bfb3.png)
-  * Strimzi Zookeeper:
-    ![image](https://user-images.githubusercontent.com/58408898/132935908-6d9dae01-f4dc-4402-a65a-f20e88431e99.png)
+* Set up Strimzi Grafana dashboard
+  * Login to Grafano through route, use default username and password(Should be admin/admin, you should change to new secure password)
+    ![image](https://user-images.githubusercontent.com/58408898/132934688-a88be152-191d-472e-8da2-51b0b0af5df3.png) 
+  * Check Prometheus datasource
+    ![image](https://user-images.githubusercontent.com/58408898/132934963-f8d7dbb1-6b10-4c32-be27-88485d8e01c7.png) 
+    ![image](https://user-images.githubusercontent.com/58408898/132934972-6b84a0a8-96b8-4ed5-a1c6-4796d0f5db5c.png)
+  * Import basic dashboard, see [dashboard json](https://github.com/snowfish424/kafka_lab/tree/main/monitor/grafana/dashboard)
+    * strimzi-kafka
+    * strimzi-zookeeper
+    * strimzi-kafka-exporter
+    * strimzi-operator
+    * strimzi-crusie-control
+    ![image](https://user-images.githubusercontent.com/58408898/132935056-176248a3-1d4c-4908-9380-14321beae207.png)
+  * Check wtih Dashboard to see the data show appropriately
+    * Strimzi Kafka:
+      ![image](https://user-images.githubusercontent.com/58408898/132935850-0960c17a-103a-4206-921b-c03d5090cf72.png)
+    * Strimzi Kafka exporter:
+      ![image](https://user-images.githubusercontent.com/58408898/132935888-8718e0c1-f020-481a-8179-5afdefd6bfb3.png)
+    * Strimzi Zookeeper:
+      ![image](https://user-images.githubusercontent.com/58408898/132935908-6d9dae01-f4dc-4402-a65a-f20e88431e99.png)
+
+# Kafka Mirror Maker 2.0
+
+## Install target cluster and mm2
+* Create a target Kafka cluster
+  * Repeat Kafka install procedure
+  * Use installed operator to install Kafka mirror maker 2.0. There are 3 install scheme
+    * Install at the source cluster project
+    * Install at the target cluster project
+    * Install at it's own independent project
+    The sample procedure shown below follow the 2nd scheme, create mm2 at the target cluster project
+    ![image](https://user-images.githubusercontent.com/58408898/132937585-f491683b-5c98-42be-9037-c4b49c98d099.png)
+  * Create mm2-credentials for access source cluster topic via 9093 port, see [secret-mm2-credentials](https://github.com/snowfish424/kafka_lab/blob/main/install/secret-mm2-credentials.yaml)
+  * Create mm2 with yaml file, see [kafkamirrormaker2-my-mm2-cluster](https://github.com/snowfish424/kafka_lab/blob/main/install/kafkamirrormaker2-my-mm2-cluster.yaml)
+  * Check mm2 topic status, a standard HA cluster should included
+
+# Kafka Client Load Test
+
+## Producer Load Test
+* Use Kafka producer perf tool
+  * Run kafka-producer-perf-test.sh with SCRAM
+    ```
+    oc run kafka-producer -ti --image=registry.redhat.io/amq7/amq-streams-kafka-23:1.3.0 --rm=true --restart=Never -- /bin/bash -c "cat >/tmp/producer.properties <<EOF 
+    security.protocol=SASL_PLAINTEXT
+    sasl.mechanism=SCRAM-SHA-512
+    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="my-user" password="<password>";
+    EOF
+    bin/kafka-producer-perf-test.sh --topic my-topic --num-records 1000 --record-size 1000 --throughput 50 --producer-props bootstrap.servers=my-cluster-kafka-bootstrap:9093 acks=all --producer.config=/tmp/producer.properties --print-metric
+    "
+    ```
+    * total records sent
+    * records/sec
+    * avg latency
+    * max latency
+    ![image](https://user-images.githubusercontent.com/58408898/132939580-af4b1d81-ba4c-4c43-8537-982b83970c62.png)
+
+## Consumer Load Test
+* Use Kafka consumer perf tool 
+  * Run kafka-consumer-perf-test.sh with SCRAM
+    ```
+    oc run kafka-consumer -ti --image=registry.redhat.io/amq7/amq-streams-kafka-23:1.3.0 --rm=true --restart=Never -- /bin/bash -c "cat >/tmp/consumer.properties <<EOF
+    security.protocol=SASL_PLAINTEXT
+    sasl.mechanism=SCRAM-SHA-512
+    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="my-user" password="kxXxFJSWVtrb";
+    EOF
+    bin/kafka-consumer-perf-test.sh --broker-list my-cluster-kafka-bootstrap:9093 --topic my-topic-load-test --messages 100 --threads 3 --group load-test --consumer.config=/tmp/consumer.properties
+    "
+    ```    
+    * start.time
+    * end.time
+    * data.consumed.in.MB
+    * MB.sec
+    * data.consumed.in.nMsg
+    * nMsg.sec
+    * rebalance.time.ms
+    * fetch.time.ms
+    * fetch.MB.sec
+    * fetch.nMsg.sec
