@@ -231,7 +231,6 @@
     ...  
       secureJsonData:
         httpHeaderValue1: "Bearer <your token>"
-    ...	
     ```
   * Create grafana-config configmap with datasource.yaml
     ```
@@ -253,7 +252,7 @@
     route.route.openshift.io/grafana created
     ```
 * Add kafka and zookeeper metrics config in Kafka CR
-    ```
+    ```yaml
     spec:
     ...
       kafka:
