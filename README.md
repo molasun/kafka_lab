@@ -120,38 +120,71 @@
   
 ## Kafka client example
 
-* Kafka client producer config
+* Kafka client Configuration
+  * Kafka client producer config
   ```java 
   @Bean
   public ProducerFactory<String, String> producerFactory() {
-		        Map<String, Object> producerProps = new HashMap<String, Object>();
-		        producerProps.put("bootstrap.servers", "my-cluster-kafka-bootstrap:9093");
-		        producerProps.put("acks", "all");
-		        producerProps.put("retries", 2);
-		        producerProps.put("max.block.ms", 5000);
-		        producerProps.put("batch.size", 16384);
-		        producerProps.put("linger.ms", 1);
-		        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		        producerProps.put("security.protocol", "SASL_PLAINTEXT");
-		        producerProps.put("sasl.mechanism", "SCRAM-SHA-512");
-		        producerProps.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"<password>\";");
-		        return new TracingProducerFactory<>(new DefaultKafkaProducerFactory<>(producerProps), tracer());
+	  Map<String, Object> producerProps = new HashMap<String, Object>();
+	  producerProps.put("bootstrap.servers", "my-cluster-kafka-bootstrap:9093");
+	  producerProps.put("acks", "all");
+	  producerProps.put("retries", 2);
+	  producerProps.put("max.block.ms", 5000);
+	  producerProps.put("batch.size", 16384);
+	  producerProps.put("linger.ms", 1);
+	  producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+	  producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+	  producerProps.put("security.protocol", "SASL_PLAINTEXT");
+	  producerProps.put("sasl.mechanism", "SCRAM-SHA-512");
+	  producerProps.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"<password>\";");
+	  return new TracingProducerFactory<>(new DefaultKafkaProducerFactory<>(producerProps), tracer());
   }
   ```   
-* Kafka client consumer config
+  * Kafka client consumer config
   ```java
   @Bean
   public ConsumerFactory<String, String> consumerFactory() {
-		        Map<String, Object> consumerProps = new HashMap<String, Object>();
-		        consumerProps.put("bootstrap.servers", "my-cluster-kafka-bootstrap:9093");
-		        consumerProps.put("group.id", "sample-consumer");
-		        consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-		        consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-		        consumerProps.put("security.protocol", "SASL_PLAINTEXT");
-		        consumerProps.put("sasl.mechanism", "SCRAM-SHA-512");
-		        consumerProps.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"<password>\";");
-		        return new TracingConsumerFactory<>(new DefaultKafkaConsumerFactory<>(consumerProps), tracer());
+          Map<String, Object> consumerProps = new HashMap<String, Object>();
+	  consumerProps.put("bootstrap.servers", "my-cluster-kafka-bootstrap:9093");
+	  consumerProps.put("group.id", "sample-consumer");
+	  consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+	  consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+	  consumerProps.put("security.protocol", "SASL_PLAINTEXT");
+	  consumerProps.put("sasl.mechanism", "SCRAM-SHA-512");
+	  consumerProps.put("sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"<password>\";");
+	  return new TracingConsumerFactory<>(new DefaultKafkaConsumerFactory<>(consumerProps), tracer());
+  }
+  ```
+  * Kafka client consumer factorry
+  ```java
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+          ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+	  factory.setConsumerFactory(consumerFactory());
+	  return factory;
+  }
+  ```
+  * Jaeger config
+  ```java
+  @Bean
+  public Tracer tracer() {
+  	  return io.jaegertracing.Configuration.fromEnv(applicationName)
+	  		  .withSampler(
+					  io.jaegertracing.Configuration.SamplerConfiguration.fromEnv().withType(ConstSampler.TYPE).withParam(1))
+			  .withReporter(io.jaegertracing.Configuration.ReporterConfiguration.fromEnv().withLogSpans(true)
+					  .withFlushInterval(1000).withMaxQueueSize(10000)
+					  .withSender(io.jaegertracing.Configuration.SenderConfiguration.fromEnv()
+							  .withAgentHost(jaegerHost).withAgentPort(jaegerPort)))
+			  .getTracer();
+  }  
+  ```
+* Kafka client Configuration
+  * Kafka listener
+  ```java
+  @KafkaListener(topics = "my-topic", containerFactory = "kafkaListenerContainerFactory")
+  public void listen(ConsumerRecord<?, ?> cr) throws Exception {
+      logger.info(cr.toString());
+      latch.countDown();
   }
   ```
 
