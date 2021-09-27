@@ -1,19 +1,23 @@
 package org.acme.song.app;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import org.json.JSONException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
+
+import lombok.SneakyThrows;
 
 @RestController
 @RequestMapping("/forwardToKafka")
@@ -60,20 +64,6 @@ public class SongController {
         });
 
         return response;
-    }
-
-    // private void sendHttp() throws JSONException {
-    //     // String Url =
-    //     // "http://ctbc-kafka-route-amq-stream.apps.ocp4.pretest.intra.ctbcbank.com/topics/my-topic";
-    //     String Url = "http://localhost:8084/topics/my-topic";
-    //     RestTemplate restTemplate = new RestTemplate();
-    //     // HttpHeaders headers = new HttpHeaders();
-    //     // headers.setContentType(MediaType.APPLICATION_JSON);
-    //     // JSONObject personJsonObject = new JSONObject();
-    //     // personJsonObject.put("key", "key-1");
-    //     // personJsonObject.put("value", "value-1");
-    //     String result = restTemplate.getForObject(Url, String.class);
-    //     System.out.print("result:" + result);
     }
 
 }
