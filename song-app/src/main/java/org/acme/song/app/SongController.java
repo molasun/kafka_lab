@@ -1,5 +1,8 @@
 package org.acme.song.app;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +28,10 @@ public class SongController {
 
     @Value(value = "${kafka.topic}")
     private String kafkaTopic;
+    private String ip;
 
     @Autowired
-    private KafkaTemplate<Integer, String> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate;
     // private ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping(consumes = "application/json")
@@ -39,13 +43,19 @@ public class SongController {
 
         System.out.println("jsonInput:" + jsonInput + "v5");
 
-        final ListenableFuture<SendResult<Integer, String>> future = kafkaTemplate.send(kafkaTopic, 1, jsonInput);
+        try {
+            ip = InetAddress.getLocalHost().toString();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
 
-        future.addCallback(new ListenableFutureCallback<SendResult<Integer, String>>() {
+        final ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(kafkaTopic, ip, jsonInput);
+
+        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
 
             @SneakyThrows
             @Override
-            public void onSuccess(SendResult<Integer, String> result) {
+            public void onSuccess(SendResult<String, String> result) {
 
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(result).append(" offset=[").append(result.getRecordMetadata().offset())
