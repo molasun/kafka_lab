@@ -39,7 +39,7 @@ public class SongController {
 
         System.out.println("jsonInput:" + jsonInput + "v5");
 
-        final ListenableFuture<SendResult<Integer, String>> future = kafkaTemplate.send(kafkaTopic, jsonInput);
+        final ListenableFuture<SendResult<Integer, String>> future = kafkaTemplate.send(kafkaTopic, 1, jsonInput);
 
         future.addCallback(new ListenableFutureCallback<SendResult<Integer, String>>() {
 
