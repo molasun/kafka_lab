@@ -37,7 +37,7 @@ public class SongController {
 
         final DeferredResult<ResponseEntity<?>> response = new DeferredResult<>();
 
-        System.out.println("jsonInput:" + jsonInput);
+        System.out.println("jsonInput:" + jsonInput + "v2");
 
         final ListenableFuture<SendResult<Integer, String>> future = kafkaTemplate.send(kafkaTopic, jsonInput);
 
