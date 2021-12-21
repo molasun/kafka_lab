@@ -11,11 +11,14 @@ import java.util.List;
 public class Consumer {
 
     @KafkaListener(topics = "${kafka.topic}")
-    public void processMessage(Song message,
+    public void processMessage(Song song,
             @Header(KafkaHeaders.RECEIVED_PARTITION_ID) List<Integer> partitions,
             @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) List<String> key,
             @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
             @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
+
+        String message = song.getSongId().toString() + ": " + song.getSongName().toString();
+
         System.out.printf(this.getClass().getSimpleName() + " receive=>  %s-%d[%d] \"%s\"\n", topics.get(0),
                 partitions.get(0), offsets.get(0), message);
     }
