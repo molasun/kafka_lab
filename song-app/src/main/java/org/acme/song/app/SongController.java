@@ -31,7 +31,7 @@ public class SongController {
     private String ip;
 
     @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private KafkaTemplate<String, Song> kafkaTemplate;
 
     @PostMapping(path = "/create", consumes = "application/json")
     @ResponseBody
@@ -48,13 +48,13 @@ public class SongController {
             e.printStackTrace();
         }
 
-        final ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(kafkaTopic, ip, song);
+        final ListenableFuture<SendResult<String, Song>> future = kafkaTemplate.send(kafkaTopic, ip, song);
 
-        future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
+        future.addCallback(new ListenableFutureCallback<SendResult<String, Song>>() {
 
             @SneakyThrows
             @Override
-            public void onSuccess(SendResult<String, Object> result) {
+            public void onSuccess(SendResult<String, Song> result) {
 
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(result).append(" offset=[")
