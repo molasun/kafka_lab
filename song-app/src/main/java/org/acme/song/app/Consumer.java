@@ -11,7 +11,7 @@ import java.util.List;
 public class Consumer {
 
     @KafkaListener(topics = "${kafka.topic}")
-    public void processMessage(String message,
+    public void processMessage(Song message,
             @Header(KafkaHeaders.RECEIVED_PARTITION_ID) List<Integer> partitions,
             @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) List<String> key,
             @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
