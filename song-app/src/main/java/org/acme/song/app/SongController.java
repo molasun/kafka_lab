@@ -23,7 +23,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import lombok.SneakyThrows;
 
 @RestController
-@RequestMapping("/forwardToKafka")
+@RequestMapping("/song")
 public class SongController {
 
     @Value(value = "${kafka.topic}")
@@ -31,17 +31,16 @@ public class SongController {
     private String ip;
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
-    // private ObjectMapper objectMapper = new ObjectMapper();
+    private KafkaTemplate<String, Song> kafkaTemplate;
 
-    @PostMapping(consumes = "application/json")
+    @PostMapping(path = "/create", consumes = "application/json")
     @ResponseBody
-    public DeferredResult<ResponseEntity<?>> forwardToKafka(@RequestBody String jsonInput)
+    public DeferredResult<ResponseEntity<?>> createSong(@RequestBody Song song)
             throws JsonProcessingException {
 
         final DeferredResult<ResponseEntity<?>> response = new DeferredResult<>();
 
-        System.out.println("jsonInput:" + jsonInput + "v5");
+        System.out.println("jsonInput:" + song + "v5");
 
         try {
             ip = InetAddress.getLocalHost().toString();
@@ -49,16 +48,17 @@ public class SongController {
             e.printStackTrace();
         }
 
-        final ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(kafkaTopic, ip, jsonInput);
+        final ListenableFuture<SendResult<String, Song>> future = kafkaTemplate.send(kafkaTopic, ip, song);
 
-        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
+        future.addCallback(new ListenableFutureCallback<SendResult<String, Song>>() {
 
             @SneakyThrows
             @Override
-            public void onSuccess(SendResult<String, String> result) {
+            public void onSuccess(SendResult<String, Song> result) {
 
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(result).append(" offset=[").append(result.getRecordMetadata().offset())
+                stringBuilder.append(result).append(" offset=[")
+                        .append(result.getRecordMetadata().offset())
                         .append("]");
                 System.out.println(stringBuilder.toString());
 
@@ -68,7 +68,7 @@ public class SongController {
 
             @Override
             public void onFailure(Throwable ex) {
-                System.out.println("Unable to send message=[" + jsonInput + "] due to : " + ex.getMessage());
+                System.out.println("Unable to send message=[" + song + "] due to : " + ex.getMessage());
                 response.setErrorResult(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage()));
             }
         });
